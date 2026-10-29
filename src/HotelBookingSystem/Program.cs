@@ -1,4 +1,5 @@
 using HotelBookingSystem.Data;
+using HotelBookingSystem.Settings;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,12 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+// ---------- JWT settings (validated at startup) ----------
+builder.Services.AddOptions<JwtSettings>()
+    .Bind(builder.Configuration.GetSection(JwtSettings.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 // ---------- MVC ----------
 builder.Services.AddControllersWithViews();
