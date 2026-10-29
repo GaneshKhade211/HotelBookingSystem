@@ -27,12 +27,16 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
+                    @* Change 1: Register/Login or Hello/Logout, shown on the right *@
+                    <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            @* Change 2: success/error messages from TempData *@
+            <partial name="_Alerts" />
             @RenderBody()
         </main>
     </div>

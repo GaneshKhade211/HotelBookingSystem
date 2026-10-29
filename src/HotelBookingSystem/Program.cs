@@ -137,7 +137,9 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 // ---------- MVC ----------
-builder.Services.AddControllersWithViews();
+// Every POST/PUT/DELETE must carry a valid antiforgery token (CSRF protection for cookie auth)
+builder.Services.AddControllersWithViews(options =>
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));
 
 var app = builder.Build();
 
