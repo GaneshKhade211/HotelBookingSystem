@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using HotelBookingSystem.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,14 +79,22 @@ builder.Services
         options.Events = new JwtBearerEvents
         {
             // 1. Read the token from our HttpOnly cookie instead of the Authorization header
+
+
             OnMessageReceived = context =>
             {
-                if (context.Request.Cookies.TryGetValue(AuthCookies.AccessToken, out var token))
+                if (context.HttpContext.Items.TryGetValue(TokenRefreshMiddleware.RefreshedAccessTokenKey, out var refreshed)
+                    && refreshed is string refreshedToken)
+                {
+                    context.Token = refreshedToken;
+                }
+                else if (context.Request.Cookies.TryGetValue(AuthCookies.AccessToken, out var token))
                 {
                     context.Token = token;
                 }
                 return Task.CompletedTask;
             },
+           
 
             // 2. After signature/lifetime checks pass: require "sub" and an existing, active user
             OnTokenValidated = async context =>
@@ -158,6 +167,7 @@ using (var scope = app.Services.CreateScope())
     await DbInitializer.SeedRolesAsync(services, app.Logger);
 }
 
+
 // ---------- HTTP pipeline ----------
 if (!app.Environment.IsDevelopment())
 {
@@ -167,6 +177,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseMiddleware<TokenRefreshMiddleware>();
 
 app.UseAuthentication();   // who are you? (reads + validates the JWT cookie)
 app.UseAuthorization();    // are you allowed? ([Authorize], roles)
