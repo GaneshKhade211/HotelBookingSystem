@@ -18,7 +18,7 @@ public class RoomService : IRoomService
         _time = time;
     }
 
-    // ---------------- Queries ----------------
+    // ---------------- Admin queries ----------------
     public async Task<List<RoomListItemViewModel>> GetAllRoomsAsync() =>
         await _db.Rooms
             .AsNoTracking()
@@ -105,7 +105,7 @@ public class RoomService : IRoomService
             .ToListAsync();
     }
 
-    // ---------------- Commands ----------------
+    // ---------------- Admin commands ----------------
     public async Task<ServiceResult> CreateRoomAsync(RoomFormViewModel model)
     {
         var validation = await ValidateAsync(model, existingRoomId: null);
@@ -202,7 +202,50 @@ public class RoomService : IRoomService
         return ServiceResult.Success(room.RoomId);
     }
 
+    // ---------------- Public browsing and search (Phase 8) ----------------
+    public async Task<List<RoomCardViewModel>> GetActiveRoomCardsAsync() =>
+        await ToCards(_db.Rooms.AsNoTracking().Where(r => r.IsActive), nights: 0)
+            .OrderBy(c => c.PricePerNight)
+            .ToListAsync();
+
+    public async Task<List<RoomCardViewModel>> SearchAvailableRoomsAsync(DateOnly checkIn, DateOnly checkOut, int guests)
+    {
+        var blocksStay = BookingRules.BlocksStay(checkIn, checkOut);
+        var nights = BookingRules.CountNights(checkIn, checkOut);
+
+        // Active rooms, big enough, with NO blocking booking that overlaps the requested dates.
+        // Runs as ONE SQL query (NOT EXISTS subquery) on the server.
+        var rooms = _db.Rooms
+            .AsNoTracking()
+            .Where(r => r.IsActive && r.Capacity >= guests)
+            .Where(r => !r.Bookings.AsQueryable().Any(blocksStay));
+
+        return await ToCards(rooms, nights)
+            .OrderBy(c => c.PricePerNight)
+            .ToListAsync();
+    }
+
+    public async Task<bool> IsRoomAvailableAsync(int roomId, DateOnly checkIn, DateOnly checkOut) =>
+        !await _db.Bookings
+            .Where(b => b.RoomId == roomId)
+            .AnyAsync(BookingRules.BlocksStay(checkIn, checkOut));
+
     // ---------------- Helpers ----------------
+    private static IQueryable<RoomCardViewModel> ToCards(IQueryable<Room> rooms, int nights) =>
+        rooms.Select(r => new RoomCardViewModel
+        {
+            RoomId = r.RoomId,
+            RoomNumber = r.RoomNumber,
+            RoomTypeName = r.RoomType.Name,
+            Description = r.Description,
+            Capacity = r.Capacity,
+            PricePerNight = r.PricePerNight,
+            ImageUrl = r.ImageUrl,
+            Amenities = r.AmenityMappings.Select(m => m.Amenity.Name).OrderBy(n => n).ToList(),
+            Nights = nights,
+            TotalPrice = r.PricePerNight * nights
+        });
+
     private async Task<ServiceResult> ValidateAsync(RoomFormViewModel model, int? existingRoomId)
     {
         var roomNumber = NormalizeRoomNumber(model.RoomNumber);
@@ -274,47 +317,4 @@ public class RoomService : IRoomService
 
         return Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
     }
-
-    // ---------------- Public browsing and search (Phase 8) ----------------
-    public async Task<List<RoomCardViewModel>> GetActiveRoomCardsAsync() =>
-        await ToCards(_db.Rooms.AsNoTracking().Where(r => r.IsActive), nights: 0)
-            .OrderBy(c => c.PricePerNight)
-            .ToListAsync();
-
-    public async Task<List<RoomCardViewModel>> SearchAvailableRoomsAsync(DateOnly checkIn, DateOnly checkOut, int guests)
-    {
-        var blocksStay = BookingRules.BlocksStay(checkIn, checkOut);
-        var nights = BookingRules.CountNights(checkIn, checkOut);
-
-        // Active rooms, big enough, with NO blocking booking that overlaps the requested dates.
-        // Runs as ONE SQL query (NOT EXISTS subquery) on the server.
-        var rooms = _db.Rooms
-            .AsNoTracking()
-            .Where(r => r.IsActive && r.Capacity >= guests)
-            .Where(r => !r.Bookings.AsQueryable().Any(blocksStay));
-
-        return await ToCards(rooms, nights)
-            .OrderBy(c => c.PricePerNight)
-            .ToListAsync();
-    }
-
-    public async Task<bool> IsRoomAvailableAsync(int roomId, DateOnly checkIn, DateOnly checkOut) =>
-        !await _db.Bookings
-            .Where(b => b.RoomId == roomId)
-            .AnyAsync(BookingRules.BlocksStay(checkIn, checkOut));
-
-    private static IQueryable<RoomCardViewModel> ToCards(IQueryable<Room> rooms, int nights) =>
-        rooms.Select(r => new RoomCardViewModel
-        {
-            RoomId = r.RoomId,
-            RoomNumber = r.RoomNumber,
-            RoomTypeName = r.RoomType.Name,
-            Description = r.Description,
-            Capacity = r.Capacity,
-            PricePerNight = r.PricePerNight,
-            ImageUrl = r.ImageUrl,
-            Amenities = r.AmenityMappings.Select(m => m.Amenity.Name).OrderBy(n => n).ToList(),
-            Nights = nights,
-            TotalPrice = r.PricePerNight * nights
-        });
 }

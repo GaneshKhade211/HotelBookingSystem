@@ -1,0 +1,53 @@
+﻿@model HotelBookingSystem.ViewModels.CreateBookingViewModel
+@{
+    ViewData["Title"] = "Confirm your booking";
+    var quote = Model.Quote;
+    var canBook = ViewData.ModelState.IsValid && quote is not null;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="h3 mb-3">Confirm your booking</h1>
+
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+        @if (quote is not null)
+        {
+            <div class="card shadow-sm mb-3">
+                <div class="card-body p-4">
+                    <h2 class="h5">@quote.RoomTypeName <span class="text-muted">Room @quote.RoomNumber</span></h2>
+                    <dl class="row mb-0 mt-3">
+                        <dt class="col-sm-4">Check-in</dt>
+                        <dd class="col-sm-8">@Model.CheckIn?.ToString("ddd, dd MMM yyyy")</dd>
+                        <dt class="col-sm-4">Check-out</dt>
+                        <dd class="col-sm-8">@Model.CheckOut?.ToString("ddd, dd MMM yyyy")</dd>
+                        <dt class="col-sm-4">Guests</dt>
+                        <dd class="col-sm-8">@Model.Guests</dd>
+                        <dt class="col-sm-4">Price</dt>
+                        <dd class="col-sm-8">₹@quote.PricePerNight.ToString("N2") &times; @quote.Nights night(s)</dd>
+                        <dt class="col-sm-4">Total</dt>
+                        <dd class="col-sm-8 fs-4 fw-bold">₹@quote.TotalAmount.ToString("N2")</dd>
+                    </dl>
+                    <p class="small text-muted mt-2 mb-0">The total is calculated by the hotel's system and is final.</p>
+                </div>
+            </div>
+        }
+
+        @if (canBook)
+        {
+            <form asp-action="Create" method="post">
+                <input type="hidden" asp-for="RoomId" />
+                <input type="hidden" name="CheckIn" value="@Model.CheckIn?.ToString("yyyy-MM-dd")" />
+                <input type="hidden" name="CheckOut" value="@Model.CheckOut?.ToString("yyyy-MM-dd")" />
+                <input type="hidden" asp-for="Guests" />
+                <button type="submit" class="btn btn-primary btn-lg w-100">Confirm booking</button>
+            </form>
+        }
+
+        <a asp-controller="Rooms" asp-action="Details" asp-route-id="@Model.RoomId"
+           asp-route-checkIn="@Model.CheckIn?.ToString("yyyy-MM-dd")"
+           asp-route-checkOut="@Model.CheckOut?.ToString("yyyy-MM-dd")"
+           asp-route-guests="@Model.Guests"
+           class="btn btn-link mt-2">&larr; Change dates or room</a>
+    </div>
+</div>

@@ -1,0 +1,32 @@
+﻿@model HotelBookingSystem.ViewModels.BookingDetailsViewModel
+@{
+    ViewData["Title"] = "Booking confirmation";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4 text-center">
+                <h1 class="h3">Thank you! Your booking is received.</h1>
+                <p class="text-muted mb-1">Booking reference</p>
+                <p class="display-6 fw-bold font-monospace">@Model.BookingReference</p>
+                <span class="badge text-bg-warning fs-6">@Model.BookingStatus</span>
+            </div>
+            <div class="card-body border-top p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Room</dt>
+                    <dd class="col-sm-8">@Model.RoomTypeName, Room @Model.RoomNumber</dd>
+                    <dt class="col-sm-4">Stay</dt>
+                    <dd class="col-sm-8">@Model.CheckInDate.ToString("ddd, dd MMM yyyy") &rarr; @Model.CheckOutDate.ToString("ddd, dd MMM yyyy") (@Model.NumberOfNights night(s))</dd>
+                    <dt class="col-sm-4">Guests</dt>
+                    <dd class="col-sm-8">@Model.NumberOfGuests</dd>
+                    <dt class="col-sm-4">Total</dt>
+                    <dd class="col-sm-8 fw-bold">₹@Model.TotalAmount.ToString("N2")</dd>
+                </dl>
+                <p class="small text-muted mt-3 mb-0">
+                    Your booking is <strong>Pending</strong> until payment is completed or the hotel confirms it.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

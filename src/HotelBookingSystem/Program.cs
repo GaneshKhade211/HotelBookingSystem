@@ -1,15 +1,20 @@
 using HotelBookingSystem.Data;
+using HotelBookingSystem.Middleware;
 using HotelBookingSystem.Models;
 using HotelBookingSystem.Services;
 using HotelBookingSystem.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using HotelBookingSystem.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// =====================================================================
+// SERVICES
+// =====================================================================
 
 // ---------- Database ----------
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -31,14 +36,17 @@ var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
     {
+        // Duplicate accounts: also enforced by the unique UserNameIndex (UserName = Email)
         options.User.RequireUniqueEmail = true;
 
+        // Password policy
         options.Password.RequiredLength = 8;
         options.Password.RequireDigit = true;
         options.Password.RequireLowercase = true;
         options.Password.RequireUppercase = true;
         options.Password.RequireNonAlphanumeric = false;
 
+        // Brute-force protection: lock the account for 15 minutes after 5 failed logins
         options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
         options.Lockout.AllowedForNewUsers = true;
@@ -78,9 +86,7 @@ builder.Services
 
         options.Events = new JwtBearerEvents
         {
-            // 1. Read the token from our HttpOnly cookie instead of the Authorization header
-
-
+            // 1. Use a token just issued by TokenRefreshMiddleware, otherwise read our HttpOnly cookie
             OnMessageReceived = context =>
             {
                 if (context.HttpContext.Items.TryGetValue(TokenRefreshMiddleware.RefreshedAccessTokenKey, out var refreshed)
@@ -94,7 +100,6 @@ builder.Services
                 }
                 return Task.CompletedTask;
             },
-           
 
             // 2. After signature/lifetime checks pass: require "sub" and an existing, active user
             OnTokenValidated = async context =>
@@ -143,21 +148,21 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // ---------- Application services ----------
+builder.Services.AddSingleton(TimeProvider.System);          // "now", replaceable in tests
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
-builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<IBookingService, BookingService>();
 
 // ---------- MVC ----------
 // Every POST/PUT/DELETE must carry a valid antiforgery token (CSRF protection for cookie auth)
 builder.Services.AddControllersWithViews(options =>
-    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 
 var app = builder.Build();
 
-// ---------- Startup tasks: DB check (dev only) + seed roles ----------
-
-//await DbInitializer.SeedRolesAsync(Services, app.Logger);
-// ---------- Startup tasks: DB check (dev only), seed roles, seed dev admin ----------
+// =====================================================================
+// STARTUP TASKS: DB check, roles, reference data, dev admin + sample rooms
+// =====================================================================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -174,7 +179,7 @@ using (var scope = app.Services.CreateScope())
     await DbInitializer.SeedRolesAsync(services, app.Logger);
     await DbInitializer.SeedReferenceDataAsync(services, app.Logger);
 
-    // 3. Development-only conveniences
+    // 3. Development-only conveniences (see README: "Creating the admin account")
     if (app.Environment.IsDevelopment())
     {
         await DbInitializer.SeedDevelopmentAdminAsync(services, app.Configuration, app.Logger);
@@ -182,7 +187,9 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// ---------- HTTP pipeline ----------
+// =====================================================================
+// HTTP PIPELINE (order matters)
+// =====================================================================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -192,10 +199,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseMiddleware<TokenRefreshMiddleware>();
-
-app.UseAuthentication();   // who are you? (reads + validates the JWT cookie)
-app.UseAuthorization();    // are you allowed? ([Authorize], roles)
+app.UseMiddleware<TokenRefreshMiddleware>();  // refresh expiring access tokens first
+app.UseAuthentication();                       // who are you? (reads + validates the JWT cookie)
+app.UseAuthorization();                        // are you allowed? ([Authorize], roles)
 
 app.MapStaticAssets();
 
