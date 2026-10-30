@@ -1,31 +1,82 @@
+/* ---------- Base ---------- */
 html {
-  font-size: 14px;
+    font-size: 15px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    html {
+        font-size: 16px;
+    }
 }
 
 body {
-  margin-bottom: 60px;
+    background-color: #f5f6f8;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* ---------- Navbar ---------- */
+.navbar-brand {
+    letter-spacing: 0.3px;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.navbar .nav-link.active {
+    font-weight: 600;
+}
+
+/* Logout is a <button> inside a form: make it look like the other nav links */
+.navbar .nav-link.btn-nav {
+    background: none;
+    border: 0;
+}
+
+/* ---------- Cards ---------- */
+.card {
+    border: 0;
+    border-radius: 0.75rem;
+}
+
+.card-img-top {
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+}
+
+/* Gentle lift on room cards */
+.card.h-100 {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+    .card.h-100:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+    }
+
+/* ---------- Home page ---------- */
+.hero-img {
+    display: block;
+    height: 260px;
+    object-fit: cover; /* fills the box without stretching the photo */
+    object-position: center;
+}
+
+@media (min-width: 992px) {
+    .hero-img {
+        height: 440px;
+    }
+}
+
+.feature-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+/* ---------- Tables ---------- */
+.table > :not(caption) > * > * {
+    padding: 0.65rem 0.75rem;
+}
+
+/* ---------- Forms: visible keyboard focus (accessibility) ---------- */
+.btn:focus-visible,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }

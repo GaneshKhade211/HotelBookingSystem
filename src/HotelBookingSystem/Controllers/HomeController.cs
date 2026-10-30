@@ -1,31 +1,26 @@
 using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using HotelBookingSystem.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBookingSystem.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    public IActionResult Index() => View();
 
-    public HomeController(ILogger<HomeController> logger)
+    public IActionResult Privacy() => View();
+
+    // Friendly page for 404, 400, ... (wired up by UseStatusCodePagesWithReExecute in Program.cs).
+    // The original status code is kept, so browsers and search engines still see a real 404.
+    [Route("Home/Status/{code:int}")]
+    public IActionResult Status(int code)
     {
-        _logger = logger;
+        Response.StatusCode = code;
+        return View(model: code);
     }
 
-    public IActionResult Index()
-    {
-        return View();
-    }
-
-    public IActionResult Privacy()
-    {
-        return View();
-    }
-
+    // Unhandled exceptions in non-Development environments land here (no technical details shown)
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-    }
+    public IActionResult Error() =>
+        View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 }

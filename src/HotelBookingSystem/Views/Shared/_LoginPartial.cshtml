@@ -1,35 +1,40 @@
-﻿<ul class="navbar-nav">
+﻿@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    string Active(string name) =>
+        string.Equals(controller, name, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+}
+<ul class="navbar-nav ms-lg-auto">
     @if (User.Identity?.IsAuthenticated == true)
     {
         @* Convenience only: hiding a link is NOT security. The controllers' [Authorize] is. *@
         @if (User.IsInRole(AppRoles.Admin))
         {
             <li class="nav-item">
-                <a class="nav-link text-dark fw-semibold" asp-controller="Admin" asp-action="Index">Admin</a>
+                <a class="nav-link @Active("Admin")" asp-controller="Admin" asp-action="Index">Admin</a>
             </li>
         }
         @if (User.IsInRole(AppRoles.Guest))
         {
             <li class="nav-item">
-                <a class="nav-link text-dark" asp-controller="Bookings" asp-action="Index">My bookings</a>
+                <a class="nav-link @Active("Bookings")" asp-controller="Bookings" asp-action="Index">My bookings</a>
             </li>
         }
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-controller="Account" asp-action="Profile">Hello, @User.Identity.Name</a>
+            <a class="nav-link @Active("Account")" asp-controller="Account" asp-action="Profile">Hello, @User.Identity.Name</a>
         </li>
         <li class="nav-item">
             <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+                <button type="submit" class="nav-link btn-nav">Logout</button>
             </form>
         </li>
     }
     else
     {
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
+            <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
+            <a class="btn btn-primary btn-sm ms-lg-2 mt-2 mt-lg-0" asp-controller="Account" asp-action="Register">Register</a>
         </li>
     }
 </ul>

@@ -35,7 +35,7 @@
                     <dt class="col-sm-4">Created</dt>
                     <dd class="col-sm-8">@Model.CreatedAtUtc.ToString("dd MMM yyyy HH:mm") UTC</dd>
                     <dt class="col-sm-4">Last updated</dt>
-                    <dd class="col-sm-8">@(Model.UpdatedAtUtc?.ToString("dd MMM yyyy HH:mm") + " UTC" ?? "-")</dd>
+                    <dd class="col-sm-8">@(Model.UpdatedAtUtc is { } updated ? updated.ToString("dd MMM yyyy HH:mm") + " UTC" : "-")</dd>
                 </dl>
             </div>
         </div>

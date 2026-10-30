@@ -198,6 +198,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Friendly pages for 404 etc. Keeps the real status code (re-executes, does not redirect)
+app.UseStatusCodePagesWithReExecute("/Home/Status/{0}");
+
 app.UseHttpsRedirection();
 app.UseRouting();
 

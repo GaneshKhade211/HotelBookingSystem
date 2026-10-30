@@ -1,8 +1,63 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
+
+    // Hero image. For the final submission, prefer a free-licence image saved locally,
+    // e.g. "/images/hero.jpg" in wwwroot/images (see note below).
+    const string heroImage = "https://m.bbb.org/prod/corecmsimages/2023/998adfb5-45f0-4f4c-99d2-fb20895b1fc2.jpg?tx=w_763";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@* ---------- Hero: text left, image right (image on top on phones) ---------- *@
+<section class="card shadow-sm overflow-hidden mb-4">
+    <div class="row g-0 align-items-center">
+        <div class="col-lg-6 order-first order-lg-last">
+            <img src="@heroImage" alt="Laptop showing a hotel search on a beach-side table"
+                 class="hero-img w-100" />
+        </div>
+        <div class="col-lg-6 p-4 p-md-5">
+            <h1 class="display-5 fw-bold mb-3">Welcome to Hotel Booking</h1>
+            <p class="lead text-muted mb-4">
+                Your perfect stay is just a few clicks away. Find, compare and book beautiful rooms in seconds.
+            </p>
+            <a asp-controller="Rooms" asp-action="Index" class="btn btn-primary btn-lg px-4">Explore rooms</a>
+        </div>
+    </div>
+</section>
+
+@* ---------- Availability search ---------- *@
+<div class="card shadow-sm mb-5">
+    <div class="card-body p-4">
+        <h2 class="h5 mb-3">Check availability</h2>
+        <partial name="_RoomSearchForm" model="new HotelBookingSystem.ViewModels.RoomSearchViewModel()" />
+    </div>
+</div>
+
+@* ---------- Why book with us ---------- *@
+<div class="row g-4 text-center">
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="feature-icon mb-3">&#128197;</div>
+                <h3 class="h6 fw-semibold">Real-time availability</h3>
+                <p class="small text-muted mb-0">See only the rooms that are actually free for your dates. No double bookings, ever.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="feature-icon mb-3">&#8377;</div>
+                <h3 class="h6 fw-semibold">Transparent pricing</h3>
+                <p class="small text-muted mb-0">The total for your stay is calculated upfront, so you always know exactly what you pay.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="feature-icon mb-3">&#128274;</div>
+                <h3 class="h6 fw-semibold">Secure account</h3>
+                <p class="small text-muted mb-0">Manage and cancel your bookings anytime from a protected personal account.</p>
+            </div>
+        </div>
+    </div>
 </div>

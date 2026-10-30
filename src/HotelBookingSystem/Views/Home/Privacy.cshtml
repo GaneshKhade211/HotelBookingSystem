@@ -1,6 +1,32 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Privacy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="h3 mb-3">Privacy</h1>
+        <p class="text-muted">This is a demonstration project. This page describes what the application stores.</p>
+
+        <h2 class="h5 mt-4">Account data</h2>
+        <ul>
+            <li>Your full name and email address.</li>
+            <li>Your password is never stored. Only a salted, one-way hash (ASP.NET Core Identity) is kept.</li>
+        </ul>
+
+        <h2 class="h5 mt-4">Booking data</h2>
+        <ul>
+            <li>Room, dates, number of guests, price and booking status.</li>
+            <li>No payment card numbers, CVVs or other payment credentials are collected or stored.</li>
+        </ul>
+
+        <h2 class="h5 mt-4">Cookies</h2>
+        <ul>
+            <li>
+                <strong>Authentication cookies</strong> (<code>__Host-hb_access</code>, <code>__Host-hb_refresh</code>):
+                HttpOnly, Secure, SameSite=Strict. They keep you logged in and cannot be read by JavaScript.
+            </li>
+            <li><strong>Antiforgery cookie</strong>: protects forms against cross-site request forgery.</li>
+            <li>Refresh tokens are stored only as SHA-256 hashes and are revoked when you log out.</li>
+        </ul>
+    </div>
+</div>
