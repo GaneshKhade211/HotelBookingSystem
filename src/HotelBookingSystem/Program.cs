@@ -144,6 +144,8 @@ builder.Services.AddAuthorization();
 
 // ---------- Application services ----------
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddSingleton(TimeProvider.System);
 
 // ---------- MVC ----------
 // Every POST/PUT/DELETE must carry a valid antiforgery token (CSRF protection for cookie auth)

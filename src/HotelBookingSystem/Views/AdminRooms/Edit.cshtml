@@ -1,0 +1,23 @@
+﻿@model HotelBookingSystem.ViewModels.RoomFormViewModel
+@{
+    ViewData["Title"] = $"Edit room {Model.RoomNumber}";
+}
+
+<h1 class="h3 mb-3">Edit room @Model.RoomNumber</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <form asp-action="Edit" asp-route-id="@Model.RoomId" method="post" novalidate>
+            <input type="hidden" asp-for="RoomId" />
+            <partial name="_RoomForm" model="Model" />
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Save changes</button>
+                <a asp-action="Details" asp-route-id="@Model.RoomId" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

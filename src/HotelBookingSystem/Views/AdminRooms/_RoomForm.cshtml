@@ -1,0 +1,72 @@
+﻿@model HotelBookingSystem.ViewModels.RoomFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+<div class="row g-3">
+    <div class="col-sm-6">
+        <label asp-for="RoomNumber" class="form-label"></label>
+        <input asp-for="RoomNumber" class="form-control" />
+        <span asp-validation-for="RoomNumber" class="text-danger small"></span>
+    </div>
+
+    <div class="col-sm-6">
+        <label asp-for="RoomTypeId" class="form-label"></label>
+        <select asp-for="RoomTypeId" asp-items="Model.RoomTypeOptions" class="form-select">
+            <option value="0">-- Select a room type --</option>
+        </select>
+        <span asp-validation-for="RoomTypeId" class="text-danger small"></span>
+    </div>
+
+    <div class="col-sm-6">
+        <label asp-for="Capacity" class="form-label"></label>
+        <input asp-for="Capacity" class="form-control" min="1" max="10" />
+        <span asp-validation-for="Capacity" class="text-danger small"></span>
+    </div>
+
+    <div class="col-sm-6">
+        <label asp-for="PricePerNight" class="form-label"></label>
+        <input asp-for="PricePerNight" class="form-control" step="0.01" min="1" />
+        <span asp-validation-for="PricePerNight" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Description" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="ImageUrl" class="form-label"></label>
+        <input asp-for="ImageUrl" class="form-control" placeholder="https://... or /images/rooms/101.jpg" />
+        <div class="form-text">Optional. Leave empty to show a placeholder image.</div>
+        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+    </div>
+
+    <div class="col-12">
+        <fieldset>
+            <legend class="form-label fs-6">Amenities</legend>
+            <div class="row">
+                @foreach (var amenity in Model.AmenityOptions)
+                {
+                    <div class="col-6 col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="SelectedAmenityIds" value="@amenity.AmenityId"
+                                   id="amenity-@amenity.AmenityId"
+                                   checked="@Model.SelectedAmenityIds.Contains(amenity.AmenityId)" />
+                            <label class="form-check-label" for="amenity-@amenity.AmenityId">@amenity.Name</label>
+                        </div>
+                    </div>
+                }
+            </div>
+            <span asp-validation-for="SelectedAmenityIds" class="text-danger small"></span>
+        </fieldset>
+    </div>
+
+    <div class="col-12">
+        <div class="form-check form-switch">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label"></label>
+        </div>
+    </div>
+</div>
