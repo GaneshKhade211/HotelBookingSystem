@@ -1,0 +1,73 @@
+﻿@model HotelBookingSystem.ViewModels.ConcurrencyTestViewModel
+@{
+    ViewData["Title"] = "Concurrency test";
+}
+
+<h1 class="h3 mb-2">Simultaneous booking test</h1>
+<p class="text-muted">
+    Development-only. Starts several booking requests for the <strong>same room and dates</strong> at the
+    <strong>same instant</strong>, each with its own database connection. Exactly one should succeed.
+</p>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body d-flex flex-wrap gap-2 align-items-end">
+        <form asp-action="ConcurrencyTest" method="post" class="d-flex gap-2 align-items-end">
+            <div>
+                <label for="attempts" class="form-label small mb-1">Simultaneous requests</label>
+                <input id="attempts" name="attempts" type="number" min="2" max="50" value="10" class="form-control" style="width: 120px;" />
+            </div>
+            <button type="submit" class="btn btn-primary">Run test</button>
+        </form>
+        <form asp-action="CleanupConcurrencyTest" method="post">
+            <button type="submit" class="btn btn-outline-secondary">Remove test bookings</button>
+        </form>
+    </div>
+</div>
+
+@if (Model.HasRun)
+{
+    <div class="alert @(Model.Passed ? "alert-success" : "alert-danger")">
+        <strong>@(Model.Passed ? "PASSED" : "FAILED")</strong>:
+        @Model.Attempts.Count requests for room @Model.RoomNumber
+        (@Model.CheckIn.ToString("dd MMM yyyy") &rarr; @Model.CheckOut.ToString("dd MMM yyyy")).
+        Succeeded: <strong>@Model.Succeeded</strong>.
+        Bookings saved in the database: <strong>@Model.BookingsSavedInDatabase</strong>.
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Request #</th>
+                    <th>Result</th>
+                    <th class="text-end">Time (ms)</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var attempt in Model.Attempts)
+                {
+                    <tr>
+                        <td>@attempt.Attempt</td>
+                        <td>
+                            @if (attempt.Succeeded)
+                            {
+                                <span class="badge text-bg-success">Booked</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">Rejected</span>
+                            }
+                        </td>
+                        <td class="text-end">@attempt.ElapsedMs</td>
+                        <td class="small">@attempt.Error</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="small text-muted">
+        Rising times show requests <strong>waiting</strong> for the room lock and then being rejected
+        once the first booking is committed.
+    </p>
+}
