@@ -1,0 +1,43 @@
+﻿@model HotelBookingSystem.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin dashboard";
+}
+
+<h1 class="h3 mb-4">Admin dashboard</h1>
+
+<div class="row g-3">
+    <div class="col-6 col-lg-3">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <div class="display-6">@Model.TotalUsers</div>
+                <div class="text-muted">Users</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <div class="display-6">@Model.TotalRooms</div>
+                <div class="text-muted">Rooms</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <div class="display-6">@Model.ActiveRooms</div>
+                <div class="text-muted">Active rooms</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card text-center shadow-sm h-100">
+            <div class="card-body">
+                <div class="display-6">@Model.TotalBookings</div>
+                <div class="text-muted">Bookings</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="text-muted mt-4 mb-0">Room and booking management are added in Phases 7 and 10.</p>
