@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBookingSystem.Controllers;
 
-// Only logged-in Guests can book. Not logged in -> Login page; Admin -> Access Denied.
+// Only logged-in Guests. Not logged in -> Login page; Admin -> Access Denied.
+// Every action works on the CURRENT user's bookings only (User.GetUserId() from the JWT).
 [Authorize(Roles = AppRoles.Guest)]
 public class BookingsController : Controller
 {
@@ -20,6 +21,46 @@ public class BookingsController : Controller
         _time = time;
     }
 
+    // ---------------- My bookings ----------------
+    // GET /Bookings
+    [HttpGet]
+    public async Task<IActionResult> Index() =>
+        View(await _bookings.GetBookingsForUserAsync(User.GetUserId()));
+
+    // GET /Bookings/Details/5  -> 404 if it is not the current user's booking
+    [HttpGet]
+    public async Task<IActionResult> Details(int id)
+    {
+        var booking = await _bookings.GetBookingForUserAsync(id, User.GetUserId());
+        return booking is null ? NotFound() : View(booking);
+    }
+
+    // POST /Bookings/Cancel/5
+    [HttpPost]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        var userId = User.GetUserId();
+
+        // Ownership first: someone else's booking id behaves exactly like a missing one
+        if (await _bookings.GetBookingForUserAsync(id, userId) is null)
+        {
+            return NotFound();
+        }
+
+        var result = await _bookings.CancelBookingForUserAsync(id, userId);
+        if (result.Succeeded)
+        {
+            TempData["Success"] = "Your booking has been cancelled.";
+        }
+        else
+        {
+            TempData["Error"] = result.Error;
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // ---------------- Create ----------------
     // GET /Bookings/Create?roomId=4&checkIn=2026-11-09&checkOut=2026-11-12&guests=2
     [HttpGet]
     public async Task<IActionResult> Create(int roomId, DateOnly? checkIn, DateOnly? checkOut, int? guests)

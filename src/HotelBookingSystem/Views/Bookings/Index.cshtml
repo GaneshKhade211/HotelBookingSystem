@@ -1,0 +1,51 @@
+﻿@model List<HotelBookingSystem.ViewModels.BookingDetailsViewModel>
+@{
+    ViewData["Title"] = "My bookings";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">My bookings</h1>
+    <a asp-controller="Rooms" asp-action="Index" class="btn btn-primary">Book a room</a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">
+        You have no bookings yet. <a asp-controller="Rooms" asp-action="Index" class="alert-link">Find a room</a>.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Reference</th>
+                    <th>Room</th>
+                    <th>Stay</th>
+                    <th class="text-end">Total</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var booking in Model)
+                {
+                    <tr>
+                        <td class="font-monospace">@booking.BookingReference</td>
+                        <td>@booking.RoomTypeName, @booking.RoomNumber</td>
+                        <td class="text-nowrap">
+                            @booking.CheckInDate.ToString("dd MMM yyyy") &rarr; @booking.CheckOutDate.ToString("dd MMM yyyy")
+                            <div class="small text-muted">@booking.NumberOfNights night(s), @booking.NumberOfGuests guest(s)</div>
+                        </td>
+                        <td class="text-end">₹@booking.TotalAmount.ToString("N2")</td>
+                        <td><partial name="_BookingStatusBadge" model="booking.BookingStatus" /></td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@booking.BookingId" class="btn btn-sm btn-outline-primary">Details</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

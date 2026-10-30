@@ -10,6 +10,8 @@ public interface IBookingService
     // Creates a Pending booking for userId. Concurrency-safe.
     Task<ServiceResult> CreateBookingAsync(string userId, int roomId, DateOnly checkIn, DateOnly checkOut, int guests);
 
-    // Returns the booking ONLY if it belongs to userId (ownership check)
+    // Guest views: always filtered by userId (ownership)
     Task<BookingDetailsViewModel?> GetBookingForUserAsync(int bookingId, string userId);
+    Task<List<BookingDetailsViewModel>> GetBookingsForUserAsync(string userId);
+    Task<ServiceResult> CancelBookingForUserAsync(int bookingId, string userId);
 }

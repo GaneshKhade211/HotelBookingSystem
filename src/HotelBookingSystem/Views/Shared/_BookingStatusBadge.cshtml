@@ -1,0 +1,12 @@
+﻿@model HotelBookingSystem.Models.BookingStatus
+@{
+    var css = Model switch
+    {
+        BookingStatus.Pending => "text-bg-warning",
+        BookingStatus.Confirmed => "text-bg-success",
+        BookingStatus.Cancelled => "text-bg-secondary",
+        BookingStatus.Completed => "text-bg-primary",
+        _ => "text-bg-light"
+    };
+}
+<span class="badge @css">@Model</span>

@@ -1,0 +1,55 @@
+﻿@model HotelBookingSystem.ViewModels.BookingDetailsViewModel
+@{
+    ViewData["Title"] = $"Booking {Model.BookingReference}";
+}
+
+<a asp-action="Index" class="d-inline-block mb-3">&larr; My bookings</a>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <div class="text-muted small">Booking reference</div>
+                    <div class="h4 mb-0 font-monospace">@Model.BookingReference</div>
+                </div>
+                <div class="fs-5"><partial name="_BookingStatusBadge" model="Model.BookingStatus" /></div>
+            </div>
+            <div class="card-body border-top p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Room</dt>
+                    <dd class="col-sm-8">@Model.RoomTypeName, Room @Model.RoomNumber</dd>
+                    <dt class="col-sm-4">Check-in</dt>
+                    <dd class="col-sm-8">@Model.CheckInDate.ToString("ddd, dd MMM yyyy")</dd>
+                    <dt class="col-sm-4">Check-out</dt>
+                    <dd class="col-sm-8">@Model.CheckOutDate.ToString("ddd, dd MMM yyyy")</dd>
+                    <dt class="col-sm-4">Guests</dt>
+                    <dd class="col-sm-8">@Model.NumberOfGuests</dd>
+                    <dt class="col-sm-4">Price</dt>
+                    <dd class="col-sm-8">₹@Model.PricePerNight.ToString("N2") &times; @Model.NumberOfNights night(s)</dd>
+                    <dt class="col-sm-4">Total</dt>
+                    <dd class="col-sm-8 fw-bold">₹@Model.TotalAmount.ToString("N2")</dd>
+                    <dt class="col-sm-4">Booked on</dt>
+                    <dd class="col-sm-8">@Model.CreatedAtUtc.ToString("dd MMM yyyy HH:mm") UTC</dd>
+                </dl>
+            </div>
+            <div class="card-body border-top p-4">
+                @if (Model.CanCancel)
+                {
+                    <form asp-action="Cancel" asp-route-id="@Model.BookingId" method="post">
+                        <button type="submit" class="btn btn-outline-danger"
+                                onclick="return confirm('Cancel booking @Model.BookingReference? This cannot be undone.');">
+                            Cancel booking
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted small mb-0">
+                        This booking cannot be cancelled online. Only pending or confirmed bookings can be cancelled before the check-in date.
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

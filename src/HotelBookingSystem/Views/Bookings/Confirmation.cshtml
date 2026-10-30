@@ -10,7 +10,7 @@
                 <h1 class="h3">Thank you! Your booking is received.</h1>
                 <p class="text-muted mb-1">Booking reference</p>
                 <p class="display-6 fw-bold font-monospace">@Model.BookingReference</p>
-                <span class="badge text-bg-warning fs-6">@Model.BookingStatus</span>
+                <div class="fs-6"><partial name="_BookingStatusBadge" model="Model.BookingStatus" /></div>
             </div>
             <div class="card-body border-top p-4">
                 <dl class="row mb-0">
@@ -26,6 +26,10 @@
                 <p class="small text-muted mt-3 mb-0">
                     Your booking is <strong>Pending</strong> until payment is completed or the hotel confirms it.
                 </p>
+            </div>
+            <div class="card-body border-top p-4 d-flex flex-wrap gap-2">
+                <a asp-action="Details" asp-route-id="@Model.BookingId" class="btn btn-primary">View booking</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">My bookings</a>
             </div>
         </div>
     </div>

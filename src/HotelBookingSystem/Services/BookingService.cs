@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Linq.Expressions;
+using System.Security.Cryptography;
 using HotelBookingSystem.Data;
 using HotelBookingSystem.Extensions;
 using HotelBookingSystem.Models;
@@ -129,35 +130,84 @@ public class BookingService : IBookingService
         // Any early "return" above disposes the transaction without committing -> rollback -> lock released
     }
 
-    // ---------------- Read (with ownership check) ----------------
-    public async Task<BookingDetailsViewModel?> GetBookingForUserAsync(int bookingId, string userId)
+    // ---------------- Guest views (ownership enforced in every query) ----------------
+    public async Task<BookingDetailsViewModel?> GetBookingForUserAsync(int bookingId, string userId) =>
+        await _db.Bookings
+            .AsNoTracking()
+            .Where(b => b.BookingId == bookingId && b.UserId == userId)
+            .Select(ToDetails(_time.GetHotelToday()))
+            .SingleOrDefaultAsync();
+
+    public async Task<List<BookingDetailsViewModel>> GetBookingsForUserAsync(string userId) =>
+        await _db.Bookings
+            .AsNoTracking()
+            .Where(b => b.UserId == userId)
+            .OrderByDescending(b => b.CheckInDate)
+            .ThenByDescending(b => b.BookingId)
+            .Select(ToDetails(_time.GetHotelToday()))
+            .ToListAsync();
+
+    // ---------------- Guest cancellation ----------------
+    // Rule: own booking, status Pending or Confirmed, and check-in date still in the future.
+    public async Task<ServiceResult> CancelBookingForUserAsync(int bookingId, string userId)
     {
         var today = _time.GetHotelToday();
 
-        return await _db.Bookings
-            .AsNoTracking()
-            .Where(b => b.BookingId == bookingId && b.UserId == userId) // ownership: other users' bookings are invisible
-            .Select(b => new BookingDetailsViewModel
-            {
-                BookingId = b.BookingId,
-                BookingReference = b.BookingReference,
-                RoomNumber = b.Room.RoomNumber,
-                RoomTypeName = b.Room.RoomType.Name,
-                CheckInDate = b.CheckInDate,
-                CheckOutDate = b.CheckOutDate,
-                NumberOfGuests = b.NumberOfGuests,
-                NumberOfNights = b.NumberOfNights,
-                PricePerNight = b.PricePerNight,
-                TotalAmount = b.TotalAmount,
-                BookingStatus = b.BookingStatus,
-                CreatedAtUtc = b.CreatedAtUtc,
-                CanCancel = (b.BookingStatus == BookingStatus.Pending || b.BookingStatus == BookingStatus.Confirmed)
-                            && b.CheckInDate > today
-            })
-            .SingleOrDefaultAsync();
+        var booking = await _db.Bookings
+            .SingleOrDefaultAsync(b => b.BookingId == bookingId && b.UserId == userId);
+
+        if (booking is null)
+        {
+            return ServiceResult.Fail("Booking not found.");
+        }
+
+        if (!CanGuestCancel(booking.BookingStatus, booking.CheckInDate, today))
+        {
+            return ServiceResult.Fail(
+                "This booking can no longer be cancelled. Only pending or confirmed bookings can be cancelled before the check-in date.");
+        }
+
+        booking.BookingStatus = BookingStatus.Cancelled;
+        booking.UpdatedAtUtc = _time.GetUtcNow().UtcDateTime;
+
+        try
+        {
+            // RowVersion is checked automatically: fails if someone else changed this booking meanwhile
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return ServiceResult.Fail("This booking was just updated by someone else. Please reload the page and try again.");
+        }
+
+        _logger.LogInformation("Booking {Reference} cancelled by its guest", booking.BookingReference);
+        return ServiceResult.Success(booking.BookingId);
     }
 
     // ---------------- Helpers ----------------
+    private static bool CanGuestCancel(BookingStatus status, DateOnly checkIn, DateOnly today) =>
+        (status == BookingStatus.Pending || status == BookingStatus.Confirmed) && checkIn > today;
+
+    // One projection used by every guest query (translated to SQL by EF)
+    private static Expression<Func<Booking, BookingDetailsViewModel>> ToDetails(DateOnly today) =>
+        b => new BookingDetailsViewModel
+        {
+            BookingId = b.BookingId,
+            BookingReference = b.BookingReference,
+            RoomNumber = b.Room.RoomNumber,
+            RoomTypeName = b.Room.RoomType.Name,
+            CheckInDate = b.CheckInDate,
+            CheckOutDate = b.CheckOutDate,
+            NumberOfGuests = b.NumberOfGuests,
+            NumberOfNights = b.NumberOfNights,
+            PricePerNight = b.PricePerNight,
+            TotalAmount = b.TotalAmount,
+            BookingStatus = b.BookingStatus,
+            CreatedAtUtc = b.CreatedAtUtc,
+            CanCancel = (b.BookingStatus == BookingStatus.Pending || b.BookingStatus == BookingStatus.Confirmed)
+                        && b.CheckInDate > today
+        };
+
     // SQL Server application lock owned by the current transaction.
     // Returns false if it could not be obtained within 10 seconds.
     private async Task<bool> AcquireRoomLockAsync(int roomId)

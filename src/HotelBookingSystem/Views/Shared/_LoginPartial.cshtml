@@ -1,6 +1,19 @@
 ﻿<ul class="navbar-nav">
     @if (User.Identity?.IsAuthenticated == true)
     {
+        @* Convenience only: hiding a link is NOT security. The controllers' [Authorize] is. *@
+        @if (User.IsInRole(AppRoles.Admin))
+        {
+            <li class="nav-item">
+                <a class="nav-link text-dark fw-semibold" asp-controller="Admin" asp-action="Index">Admin</a>
+            </li>
+        }
+        @if (User.IsInRole(AppRoles.Guest))
+        {
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-controller="Bookings" asp-action="Index">My bookings</a>
+            </li>
+        }
         <li class="nav-item">
             <a class="nav-link text-dark" asp-controller="Account" asp-action="Profile">Hello, @User.Identity.Name</a>
         </li>
