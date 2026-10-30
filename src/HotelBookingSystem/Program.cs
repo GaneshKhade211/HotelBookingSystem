@@ -153,10 +153,14 @@ builder.Services.AddControllersWithViews(options =>
 var app = builder.Build();
 
 // ---------- Startup tasks: DB check (dev only) + seed roles ----------
+
+//await DbInitializer.SeedRolesAsync(Services, app.Logger);
+// ---------- Startup tasks: DB check (dev only), seed roles, seed dev admin ----------
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
+    // 1. Development-only database connectivity check
     if (app.Environment.IsDevelopment())
     {
         var db = services.GetRequiredService<ApplicationDbContext>();
@@ -164,9 +168,15 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogInformation("Database connection check: {CanConnect}", canConnect);
     }
 
+    // 2. Roles must exist before any user can be assigned to one
     await DbInitializer.SeedRolesAsync(services, app.Logger);
-}
 
+    // 3. Initial admin from User Secrets, Development only (see README: "Creating the admin account")
+    if (app.Environment.IsDevelopment())
+    {
+        await DbInitializer.SeedDevelopmentAdminAsync(services, app.Configuration, app.Logger);
+    }
+}
 
 // ---------- HTTP pipeline ----------
 if (!app.Environment.IsDevelopment())
