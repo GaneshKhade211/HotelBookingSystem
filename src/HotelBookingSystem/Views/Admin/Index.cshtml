@@ -5,50 +5,129 @@
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <h1 class="h3 mb-0">Admin dashboard</h1>
+    <div>
+        <h1 class="h3 mb-0">Admin dashboard</h1>
+        <div class="text-muted small">@Model.Today.ToString("dddd, dd MMM yyyy")</div>
+    </div>
     <div class="d-flex flex-wrap gap-2">
-        <a asp-controller="AdminRooms" asp-action="Index" class="btn btn-primary">Manage rooms</a>
+        <a asp-controller="AdminBookings" asp-action="Index" class="btn btn-primary">Manage bookings</a>
+        <a asp-controller="AdminRooms" asp-action="Index" class="btn btn-outline-primary">Manage rooms</a>
         @if (Env.IsDevelopment())
         {
-            @* Development-only diagnostics page; returns 404 in other environments *@
             <a asp-controller="DevTools" asp-action="ConcurrencyTest" class="btn btn-outline-warning">Concurrency test</a>
         }
     </div>
 </div>
 
-<div class="row g-3">
+@* ---- Today ---- *@
+<div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
         <div class="card text-center shadow-sm h-100">
             <div class="card-body">
-                <div class="display-6">@Model.TotalUsers</div>
-                <div class="text-muted">Users</div>
+                <div class="display-6">@Model.OccupancyPercent%</div>
+                <div class="text-muted">Occupancy tonight</div>
+                <div class="small text-muted">@Model.OccupiedTonight of @Model.ActiveRooms active rooms</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
         <div class="card text-center shadow-sm h-100">
             <div class="card-body">
-                <div class="display-6">@Model.TotalRooms</div>
-                <div class="text-muted">Rooms</div>
+                <div class="display-6">@Model.CheckInsToday</div>
+                <div class="text-muted">Check-ins today</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
         <div class="card text-center shadow-sm h-100">
             <div class="card-body">
-                <div class="display-6">@Model.ActiveRooms</div>
-                <div class="text-muted">Active rooms</div>
+                <div class="display-6">@Model.CheckOutsToday</div>
+                <div class="text-muted">Check-outs today</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
         <div class="card text-center shadow-sm h-100">
             <div class="card-body">
-                <div class="display-6">@Model.TotalBookings</div>
-                <div class="text-muted">Bookings</div>
+                <div class="h3 mb-1 mt-2">₹@Model.BookedValue.ToString("N0")</div>
+                <div class="text-muted">Booked value</div>
+                <div class="small text-muted">Confirmed + completed</div>
             </div>
         </div>
     </div>
 </div>
 
-<p class="text-muted mt-4 mb-0">Booking management and detailed statistics are added in Phase 10.</p>
+@* ---- Bookings by status + totals ---- *@
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Bookings by status (@Model.TotalBookings total)</h2>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <a asp-controller="AdminBookings" asp-action="Index" asp-route-status="Pending">Pending</a>
+                        <span class="badge text-bg-warning">@Model.PendingBookings</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <a asp-controller="AdminBookings" asp-action="Index" asp-route-status="Confirmed">Confirmed</a>
+                        <span class="badge text-bg-success">@Model.ConfirmedBookings</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <a asp-controller="AdminBookings" asp-action="Index" asp-route-status="Completed">Completed</a>
+                        <span class="badge text-bg-primary">@Model.CompletedBookings</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <a asp-controller="AdminBookings" asp-action="Index" asp-route-status="Cancelled">Cancelled</a>
+                        <span class="badge text-bg-secondary">@Model.CancelledBookings</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Totals</h2>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"><span>Users</span><strong>@Model.TotalUsers</strong></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Rooms</span><strong>@Model.TotalRooms</strong></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Active rooms</span><strong>@Model.ActiveRooms</strong></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Bookings</span><strong>@Model.TotalBookings</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ---- Upcoming arrivals ---- *@
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h2 class="h6 mb-3">Arrivals in the next 7 days</h2>
+        @if (Model.UpcomingArrivals.Count == 0)
+        {
+            <p class="text-muted mb-0">No arrivals in the next 7 days.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Check-in</th><th>Guest</th><th>Room</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var b in Model.UpcomingArrivals)
+                        {
+                            <tr>
+                                <td class="text-nowrap">@b.CheckInDate.ToString("ddd dd MMM")</td>
+                                <td>@b.GuestName</td>
+                                <td>@b.RoomNumber</td>
+                                <td><partial name="_BookingStatusBadge" model="b.BookingStatus" /></td>
+                                <td class="text-end">
+                                    <a asp-controller="AdminBookings" asp-action="Details" asp-route-id="@b.BookingId" class="btn btn-sm btn-outline-primary">Open</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,81 @@
+﻿@model HotelBookingSystem.ViewModels.AdminBookingFilterViewModel
+@{
+    ViewData["Title"] = "Manage bookings";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Manage bookings</h1>
+    <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary">Dashboard</a>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label asp-for="Status" class="form-label small"></label>
+                <select asp-for="Status" asp-items="Html.GetEnumSelectList<BookingStatus>()" class="form-select">
+                    <option value="">All statuses</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-6">
+                <label asp-for="Search" class="form-label small"></label>
+                <input asp-for="Search" class="form-control" placeholder="Reference, guest name, email or room number" />
+                <span asp-validation-for="Search" class="text-danger small"></span>
+            </div>
+            <div class="col-6 col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+            <div class="col-6 col-md-1">
+                <a asp-action="Index" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Bookings.Count == 0)
+{
+    <div class="alert alert-info">No bookings match these filters.</div>
+}
+else
+{
+    <p class="small text-muted">
+        Showing @Model.Bookings.Count booking(s), newest first@(Model.Bookings.Count == HotelBookingSystem.ViewModels.AdminBookingFilterViewModel.MaxRows ? " (limited to the latest 200)" : "").
+    </p>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Reference</th>
+                    <th>Guest</th>
+                    <th>Room</th>
+                    <th>Stay</th>
+                    <th class="text-end">Total</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model.Bookings)
+                {
+                    <tr>
+                        <td class="font-monospace small">@b.BookingReference</td>
+                        <td>
+                            @b.GuestName
+                            <div class="small text-muted">@b.GuestEmail</div>
+                        </td>
+                        <td>@b.RoomNumber</td>
+                        <td class="text-nowrap">
+                            @b.CheckInDate.ToString("dd MMM yyyy") &rarr; @b.CheckOutDate.ToString("dd MMM yyyy")
+                            <div class="small text-muted">@b.NumberOfNights night(s), @b.NumberOfGuests guest(s)</div>
+                        </td>
+                        <td class="text-end">₹@b.TotalAmount.ToString("N2")</td>
+                        <td><partial name="_BookingStatusBadge" model="b.BookingStatus" /></td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@b.BookingId" class="btn btn-sm btn-outline-primary">Details</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

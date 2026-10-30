@@ -1,0 +1,82 @@
+﻿@model HotelBookingSystem.ViewModels.AdminBookingDetailsViewModel
+@{
+    ViewData["Title"] = $"Booking {Model.BookingReference}";
+    var rowVersion = Convert.ToBase64String(Model.RowVersion);
+}
+
+<a asp-action="Index" class="d-inline-block mb-3">&larr; All bookings</a>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <div class="text-muted small">Booking reference</div>
+                    <div class="h4 mb-0 font-monospace">@Model.BookingReference</div>
+                </div>
+                <div class="fs-5"><partial name="_BookingStatusBadge" model="Model.BookingStatus" /></div>
+            </div>
+            <div class="card-body border-top p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Guest</dt>
+                    <dd class="col-sm-8">@Model.GuestName <span class="text-muted">(@Model.GuestEmail)</span></dd>
+                    <dt class="col-sm-4">Room</dt>
+                    <dd class="col-sm-8">@Model.RoomTypeName, Room @Model.RoomNumber</dd>
+                    <dt class="col-sm-4">Check-in</dt>
+                    <dd class="col-sm-8">@Model.CheckInDate.ToString("ddd, dd MMM yyyy")</dd>
+                    <dt class="col-sm-4">Check-out</dt>
+                    <dd class="col-sm-8">@Model.CheckOutDate.ToString("ddd, dd MMM yyyy")</dd>
+                    <dt class="col-sm-4">Guests</dt>
+                    <dd class="col-sm-8">@Model.NumberOfGuests</dd>
+                    <dt class="col-sm-4">Price</dt>
+                    <dd class="col-sm-8">₹@Model.PricePerNight.ToString("N2") &times; @Model.NumberOfNights night(s)</dd>
+                    <dt class="col-sm-4">Total</dt>
+                    <dd class="col-sm-8 fw-bold">₹@Model.TotalAmount.ToString("N2")</dd>
+                    <dt class="col-sm-4">Created</dt>
+                    <dd class="col-sm-8">@Model.CreatedAtUtc.ToString("dd MMM yyyy HH:mm") UTC</dd>
+                    <dt class="col-sm-4">Last updated</dt>
+                    <dd class="col-sm-8">@(Model.UpdatedAtUtc?.ToString("dd MMM yyyy HH:mm") + " UTC" ?? "-")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h6 mb-3">Change status</h2>
+                @if (Model.AllowedTransitions.Count == 0)
+                {
+                    <p class="text-muted small mb-0">This booking is @Model.BookingStatus. No further status changes are possible.</p>
+                }
+                else
+                {
+                    <div class="d-grid gap-2">
+                        @foreach (var status in Model.AllowedTransitions)
+                        {
+                            var (label, css) = status switch
+                            {
+                                BookingStatus.Confirmed => ("Confirm booking", "btn-success"),
+                                BookingStatus.Completed => ("Mark as completed", "btn-primary"),
+                                BookingStatus.Cancelled => ("Cancel booking", "btn-outline-danger"),
+                                _ => (status.ToString(), "btn-outline-secondary")
+                            };
+                            <form asp-action="UpdateStatus" asp-route-id="@Model.BookingId" method="post">
+                                <input type="hidden" name="newStatus" value="@status" />
+                                <input type="hidden" name="rowVersion" value="@rowVersion" />
+                                <button type="submit" class="btn @css w-100"
+                                        onclick="return confirm('@label for @Model.BookingReference?');">
+                                    @label
+                                </button>
+                            </form>
+                        }
+                    </div>
+                    @if (Model.BookingStatus == BookingStatus.Confirmed && !Model.AllowedTransitions.Contains(BookingStatus.Completed))
+                    {
+                        <p class="small text-muted mt-3 mb-0">"Completed" becomes available on the check-in date.</p>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

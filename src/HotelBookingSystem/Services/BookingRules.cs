@@ -3,7 +3,7 @@ using HotelBookingSystem.Models;
 
 namespace HotelBookingSystem.Services;
 
-// Booking policy in ONE place. Used by search (Phase 8) and booking creation (Phase 9).
+// Booking policy in ONE place. Used by search, booking creation and admin status changes.
 public static class BookingRules
 {
     public const int MaxNights = 30;
@@ -20,6 +20,19 @@ public static class BookingRules
 
     public static int CountNights(DateOnly checkIn, DateOnly checkOut) =>
         checkOut.DayNumber - checkIn.DayNumber;
+
+    // Admin status transitions:
+    //   Pending   -> Confirmed | Cancelled
+    //   Confirmed -> Cancelled, or Completed once the stay has started (check-in <= today)
+    //   Cancelled, Completed -> final
+    public static IReadOnlyList<BookingStatus> AllowedAdminTransitions(
+        BookingStatus current, DateOnly checkIn, DateOnly today) => current switch
+        {
+            BookingStatus.Pending => new[] { BookingStatus.Confirmed, BookingStatus.Cancelled },
+            BookingStatus.Confirmed when checkIn <= today => new[] { BookingStatus.Completed, BookingStatus.Cancelled },
+            BookingStatus.Confirmed => new[] { BookingStatus.Cancelled },
+            _ => Array.Empty<BookingStatus>()
+        };
 
     // Returns (field, message) pairs; an empty list means the stay is valid.
     public static List<(string Field, string Message)> ValidateStay(
