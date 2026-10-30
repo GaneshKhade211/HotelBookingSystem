@@ -168,13 +168,15 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogInformation("Database connection check: {CanConnect}", canConnect);
     }
 
-    // 2. Roles must exist before any user can be assigned to one
+    // 2. Data the app needs in every environment (idempotent)
     await DbInitializer.SeedRolesAsync(services, app.Logger);
+    await DbInitializer.SeedReferenceDataAsync(services, app.Logger);
 
-    // 3. Initial admin from User Secrets, Development only (see README: "Creating the admin account")
+    // 3. Development-only conveniences
     if (app.Environment.IsDevelopment())
     {
         await DbInitializer.SeedDevelopmentAdminAsync(services, app.Configuration, app.Logger);
+        await DbInitializer.SeedSampleRoomsAsync(services, app.Logger);
     }
 }
 
