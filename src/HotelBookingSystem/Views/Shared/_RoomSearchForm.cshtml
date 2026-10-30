@@ -1,0 +1,27 @@
+﻿@model HotelBookingSystem.ViewModels.RoomSearchViewModel
+@using HotelBookingSystem.Extensions
+@inject TimeProvider Time
+@{
+    var today = Time.GetHotelToday().ToString("yyyy-MM-dd");
+}
+
+<form asp-controller="Rooms" asp-action="Index" method="get" class="row g-2 align-items-end" novalidate>
+    <div class="col-12 col-md-4">
+        <label asp-for="CheckIn" class="form-label"></label>
+        <input asp-for="CheckIn" type="date" class="form-control" min="@today" />
+        <span asp-validation-for="CheckIn" class="text-danger small"></span>
+    </div>
+    <div class="col-12 col-md-4">
+        <label asp-for="CheckOut" class="form-label"></label>
+        <input asp-for="CheckOut" type="date" class="form-control" min="@today" />
+        <span asp-validation-for="CheckOut" class="text-danger small"></span>
+    </div>
+    <div class="col-6 col-md-2">
+        <label asp-for="Guests" class="form-label"></label>
+        <input asp-for="Guests" type="number" class="form-control" min="1" max="10" />
+        <span asp-validation-for="Guests" class="text-danger small"></span>
+    </div>
+    <div class="col-6 col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+</form>

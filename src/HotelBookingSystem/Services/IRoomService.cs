@@ -11,4 +11,8 @@ public interface IRoomService
     Task<ServiceResult> CreateRoomAsync(RoomFormViewModel model);
     Task<ServiceResult> UpdateRoomAsync(RoomFormViewModel model);
     Task<ServiceResult> SetActiveAsync(int roomId, bool isActive);
+
+    Task<List<RoomCardViewModel>> GetActiveRoomCardsAsync();
+    Task<List<RoomCardViewModel>> SearchAvailableRoomsAsync(DateOnly checkIn, DateOnly checkOut, int guests);
+    Task<bool> IsRoomAvailableAsync(int roomId, DateOnly checkIn, DateOnly checkOut);
 }
